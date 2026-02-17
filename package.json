@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.json && next build apps/admin && node scripts/copy-next-build.mjs",
+    "build": "prisma generate && tsc -p tsconfig.json && next build apps/admin && node scripts/copy-next-build.mjs",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "lint": "tsc --noEmit",
