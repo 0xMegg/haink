@@ -80,7 +80,7 @@ interface ParsedRow {
   optionValues: OptionValueInput[];
   thumbnailUrl?: string;
   productUrl?: string;
-  raw: Record<string, unknown>;
+  raw?: Prisma.InputJsonValue;
 }
 
 class ImportRowError extends Error {
@@ -281,7 +281,7 @@ function parseRow(row: Record<string, unknown>, rowNumber: number, warnings: Imp
     optionValues,
     thumbnailUrl: thumbnailUrl ?? undefined,
     productUrl: productUrl ?? undefined,
-    raw: row,
+    raw: row as Prisma.InputJsonValue,
   };
 }
 

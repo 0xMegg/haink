@@ -13,7 +13,6 @@ describe('parseCategoryIds', () => {
   });
 
   it('throws when not string', () => {
-    // @ts-expect-error intentional wrong type
-    expect(() => parseCategoryIds(null)).toThrow(CategoryParseError);
+    expect(() => parseCategoryIds(null as unknown as string)).toThrow(CategoryParseError);
   });
 });
