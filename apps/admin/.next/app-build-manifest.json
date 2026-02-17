@@ -1,0 +1,50 @@
+{
+  "pages": {
+    "/_not-found/page": [
+      "static/chunks/webpack-98afe28cdb7512c3.js",
+      "static/chunks/1dd3208c-b0284bdf72640f9f.js",
+      "static/chunks/528-3d7d2c2b33ba1723.js",
+      "static/chunks/main-app-8ea508b06f2ce2bd.js",
+      "static/chunks/app/_not-found/page-6e5a464ec4045619.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack-98afe28cdb7512c3.js",
+      "static/chunks/1dd3208c-b0284bdf72640f9f.js",
+      "static/chunks/528-3d7d2c2b33ba1723.js",
+      "static/chunks/main-app-8ea508b06f2ce2bd.js",
+      "static/css/8e09e34db17dda6c.css",
+      "static/chunks/787-a8516cdd3c61145f.js",
+      "static/chunks/app/layout-1f25028b9d971fd7.js"
+    ],
+    "/(dashboard)/products/new/page": [
+      "static/chunks/webpack-98afe28cdb7512c3.js",
+      "static/chunks/1dd3208c-b0284bdf72640f9f.js",
+      "static/chunks/528-3d7d2c2b33ba1723.js",
+      "static/chunks/main-app-8ea508b06f2ce2bd.js",
+      "static/chunks/340-e36319638721cf17.js",
+      "static/chunks/787-a8516cdd3c61145f.js",
+      "static/chunks/18-28384156c1b54752.js",
+      "static/chunks/333-bbd752018cd53210.js",
+      "static/chunks/app/(dashboard)/products/new/page-f6acaa21a5b889cd.js"
+    ],
+    "/(dashboard)/products/[id]/page": [
+      "static/chunks/webpack-98afe28cdb7512c3.js",
+      "static/chunks/1dd3208c-b0284bdf72640f9f.js",
+      "static/chunks/528-3d7d2c2b33ba1723.js",
+      "static/chunks/main-app-8ea508b06f2ce2bd.js",
+      "static/chunks/340-e36319638721cf17.js",
+      "static/chunks/787-a8516cdd3c61145f.js",
+      "static/chunks/18-28384156c1b54752.js",
+      "static/chunks/333-bbd752018cd53210.js",
+      "static/chunks/app/(dashboard)/products/[id]/page-508165858c839439.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-98afe28cdb7512c3.js",
+      "static/chunks/1dd3208c-b0284bdf72640f9f.js",
+      "static/chunks/528-3d7d2c2b33ba1723.js",
+      "static/chunks/main-app-8ea508b06f2ce2bd.js",
+      "static/chunks/340-e36319638721cf17.js",
+      "static/chunks/app/page-f5800081d6213440.js"
+    ]
+  }
+}
