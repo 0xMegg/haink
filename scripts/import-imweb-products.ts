@@ -400,7 +400,7 @@ async function importRow(parsed: ParsedRow, allowExisting: boolean): Promise<'cr
           ? {
               create: {
                 type: 'THUMBNAIL',
-                url: parsed.thumbnailUrl,
+                storage_key: parsed.thumbnailUrl,
                 sort_order: 0,
               },
             }

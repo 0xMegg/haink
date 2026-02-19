@@ -8,3 +8,4 @@ prisma/dev.db
 .next
 apps/admin/.next
 apps/admin/.next/**
+storage/

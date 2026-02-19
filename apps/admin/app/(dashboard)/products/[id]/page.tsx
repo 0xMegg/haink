@@ -14,6 +14,7 @@ export default async function EditProductPage({ params }: Props) {
     include: {
       externalProductMaps: true,
       optionValues: true,
+      images: true,
     },
   });
 
@@ -61,6 +62,13 @@ export default async function EditProductPage({ params }: Props) {
           externalUrl: imweb?.external_url ?? '',
           sourceOfTruth: imweb?.source_of_truth ?? 'IMWEB',
           rawSnapshot,
+          images: product.images
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map((image) => ({
+              storageKey: image.storage_key,
+              type: image.type,
+              sortOrder: image.sort_order,
+            })),
         }}
       />
     </div>

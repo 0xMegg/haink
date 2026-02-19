@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 
 import { prisma } from '@/lib/prisma';
 import { listProducts } from '@/lib/products';
-import { productFormSchema } from '@/lib/product-schema';
+import { productFormSchema, type ProductImageInput } from '@/lib/product-schema';
 import { parseCategoryIds } from '@/lib/category';
 import { CodeIssuer } from '@/lib/code-issuer';
 
@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     const sourceOfTruth = result.sourceOfTruth ?? 'IMWEB';
     const externalUrl = result.externalUrl?.trim() ? result.externalUrl.trim() : null;
     const rawSnapshot = parseRawSnapshot(result.rawSnapshot);
+    const imageInputs = normalizeImages(result.images);
 
     const optionValues = (result.optionValues ?? '')
       .split(',')
@@ -64,6 +65,14 @@ export async function POST(request: Request) {
           description_html: description,
           option_name: optionName,
           sot_mode: sotMode,
+          images:
+            imageInputs.length > 0
+              ? {
+                  createMany: {
+                    data: imageInputs,
+                  },
+                }
+              : undefined,
           externalProductMaps: {
             create: {
               system: 'IMWEB',
@@ -89,6 +98,7 @@ export async function POST(request: Request) {
         include: {
           externalProductMaps: true,
           optionValues: true,
+          images: true,
         },
       });
 
@@ -109,4 +119,17 @@ function parseRawSnapshot(value?: string | null) {
   } catch {
     throw new Error('rawSnapshot 필드는 올바른 JSON 문자열이어야 합니다.');
   }
+}
+
+function normalizeImages(images?: ProductImageInput[] | null) {
+  if (!images || images.length === 0) {
+    return [];
+  }
+  return images
+    .filter((image) => Boolean(image.storageKey))
+    .map((image, index) => ({
+      type: image.type ?? 'THUMBNAIL',
+      storage_key: image.storageKey,
+      sort_order: image.sortOrder ?? index,
+    }));
 }

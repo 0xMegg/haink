@@ -125,6 +125,23 @@ docker compose run --rm \
 - 외부 파일을 읽어야 하는 스크립트는 위 예시처럼 `-v` 옵션으로 마운트하거나, 컨테이너 이미지 안으로 사전에 복사해 두세요.
 - `cli` 서비스는 기본적으로 `sleep infinity` 상태로 시작하므로, `docker compose exec cli <command>` 형태로도 작업할 수 있습니다.
 
+## 상품 이미지 스토리지 (MVP)
+- 컨테이너 내부에 이미지를 저장하지 않고, 호스트 디렉터리를 볼륨으로 마운트합니다. 기본 예시는 `./storage/images:/data/product-images`이며 운영 서버에서는 `/srv/master-images`처럼 별도 경로를 추천합니다.
+- `.env` / 환경 변수
+  - `PRODUCT_IMAGE_DIR`: 업로드 파일을 쌓아둘 **호스트 경로** (Docker에서는 `/data/product-images` 등으로 마운트).
+  - `PRODUCT_IMAGE_MAX_SIZE_MB`: 업로드 허용 최대 용량 (기본 8MB).
+  - `NEXT_PUBLIC_IMAGE_BASE_URL`: 정적 서버(Nginx 등)에서 위 디렉터리를 노출하는 퍼블릭 URL prefix (예: `https://trcfirm.co.kr/images`).
+- Next.js Admin에는 `/api/uploads` 엔드포인트가 추가되어 있습니다. FormData(`file` 필드)에 이미지를 담아 POST하면 `storageKey`를 반환하며, 상품 폼에서 이 키를 그대로 DB에 저장합니다.
+- DB의 `ProductImage` 테이블에는 `storage_key`만 저장합니다. 실제 URL은 클라이언트에서 `NEXT_PUBLIC_IMAGE_BASE_URL + '/' + storage_key`로 계산합니다.
+- 정적 서빙은 Nginx 같은 별도 프로세스가 담당해야 합니다. 예시:
+  ```nginx
+  location /images/ {
+      alias /srv/master-images/;
+      add_header Cache-Control "public, max-age=31536000";
+  }
+  ```
+  `/srv/master-images` 경로는 Docker 볼륨과 동일한 경로여야 하며, Next.js 앱은 파일을 스트리밍하지 않습니다.
+
 ## 테스트
 카테고리 파서 & 옵션 canonicalizer에 대한 최소 단위 테스트가 포함되어 있습니다.
 ```bash

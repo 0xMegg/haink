@@ -5,6 +5,11 @@ const SOURCE_OF_TRUTH_VALUES = ['IMWEB', 'MASTER'] as const;
 
 const sotModeSchema = z.enum(SOT_MODE_VALUES);
 const sourceOfTruthSchema = z.enum(SOURCE_OF_TRUTH_VALUES);
+const imageSchema = z.object({
+  storageKey: z.string().min(1, '이미지 업로드에 실패했습니다. 다시 시도해주세요.'),
+  type: z.string().optional(),
+  sortOrder: z.number().int().nonnegative().optional(),
+});
 
 export const productFormSchema = z.object({
   productId: z.string().min(1, 'IMWEB 상품번호를 입력하세요.'),
@@ -28,8 +33,10 @@ export const productFormSchema = z.object({
     .optional(),
   sourceOfTruth: sourceOfTruthSchema.optional(),
   rawSnapshot: z.string().optional(),
+  images: z.array(imageSchema).optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 export const SOT_MODE_OPTIONS = SOT_MODE_VALUES;
 export const SOURCE_OF_TRUTH_OPTIONS = SOURCE_OF_TRUTH_VALUES;
+export type ProductImageInput = z.infer<typeof imageSchema>;

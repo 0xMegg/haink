@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from 'sonner';
@@ -15,6 +16,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <header className="mb-8 flex flex-col gap-2 border-b pb-4">
             <h1 className="text-2xl font-semibold">Imweb Master DB Admin</h1>
             <p className="text-sm text-muted-foreground">상품 등록 및 수정을 위한 내부용 도구</p>
+            <nav className="mt-2 flex flex-wrap gap-4 text-sm font-medium">
+              <Link href="/" className="text-muted-foreground transition hover:text-foreground">
+                대시보드
+              </Link>
+              <Link href="/control-center" className="text-muted-foreground transition hover:text-foreground">
+                제어 센터
+              </Link>
+            </nav>
           </header>
           <main>{children}</main>
         </div>

@@ -1,13 +1,16 @@
 import { prisma } from './prisma';
-import type { Product, ExternalProductMap } from '@prisma/client';
+import type { Product, ExternalProductMap, ProductImage } from '@prisma/client';
 
-export async function listProducts(limit = 20): Promise<(Product & { externalProductMaps: ExternalProductMap[] })[]> {
+export async function listProducts(
+  limit = 20
+): Promise<(Product & { externalProductMaps: ExternalProductMap[]; images: ProductImage[] })[]> {
   try {
     return await prisma.product.findMany({
       orderBy: { created_at: 'desc' },
       take: limit,
       include: {
         externalProductMaps: true,
+        images: true,
       },
     });
   } catch (error) {
@@ -23,6 +26,7 @@ export async function getProduct(productId: string) {
       include: {
         externalProductMaps: true,
         optionValues: true,
+        images: true,
       },
     });
   } catch (error) {

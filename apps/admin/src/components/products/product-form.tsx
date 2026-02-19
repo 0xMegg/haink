@@ -6,8 +6,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 
-import { productFormSchema, type ProductFormValues, SOT_MODE_OPTIONS, SOURCE_OF_TRUTH_OPTIONS } from '@/lib/product-schema';
+import { productFormSchema, type ProductFormValues, SOT_MODE_OPTIONS, SOURCE_OF_TRUTH_OPTIONS, type ProductImageInput } from '@/lib/product-schema';
 import { cn } from '@/lib/utils';
+import { resolveImageUrl } from '@/lib/image-url';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,6 +39,7 @@ const emptyDefaults: ProductFormValues = {
   externalUrl: '',
   sourceOfTruth: 'IMWEB',
   rawSnapshot: '',
+  images: [],
 };
 const selectClassName =
   'flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
@@ -57,10 +59,13 @@ export function ProductForm({ mode, productId, defaultValues }: ProductFormProps
       sourceOfTruth: defaultValues?.sourceOfTruth ?? 'IMWEB',
       externalUrl: defaultValues?.externalUrl ?? '',
       rawSnapshot: defaultValues?.rawSnapshot ?? '',
+      images: defaultValues?.images ?? [],
     },
   });
   const [isSubmitting, setSubmitting] = React.useState(false);
+  const [isUploadingImage, setUploadingImage] = React.useState(false);
   const inventoryTrack = form.watch('inventoryTrack');
+  const images = form.watch('images') ?? [];
 
   React.useEffect(() => {
     if (!inventoryTrack) {
@@ -97,6 +102,75 @@ export function ProductForm({ mode, productId, defaultValues }: ProductFormProps
       setSubmitting(false);
     }
   });
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingImage(true);
+    try {
+      const uploaded: ProductImageInput[] = [];
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith('image/')) {
+          toast.error('이미지 파일만 업로드할 수 있습니다.');
+          continue;
+        }
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch('/api/uploads', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const message = typeof data?.error === 'string' ? data.error : '업로드에 실패했습니다.';
+          throw new Error(message);
+        }
+        uploaded.push({
+          storageKey: data.storageKey,
+          type: 'THUMBNAIL',
+        });
+      }
+      if (uploaded.length > 0) {
+        const currentImages = form.getValues('images') ?? [];
+        const nextImages = [...currentImages, ...uploaded].map((image, index) => ({
+          ...image,
+          sortOrder: index,
+        }));
+        form.setValue('images', nextImages, { shouldDirty: true });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '알 수 없는 오류';
+      toast.error(message);
+    } finally {
+      setUploadingImage(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const currentImages = form.getValues('images') ?? [];
+    const nextImages = currentImages.filter((_, idx) => idx !== index).map((image, idx) => ({
+      ...image,
+      sortOrder: idx,
+    }));
+    form.setValue('images', nextImages, { shouldDirty: true });
+  };
+
+  const imageErrorMessage = React.useMemo(() => {
+    const error = form.formState.errors.images;
+    if (!error) return undefined;
+    if (Array.isArray(error)) {
+      for (const entry of error) {
+        if (entry && 'storageKey' in entry && entry.storageKey?.message) {
+          return entry.storageKey.message;
+        }
+      }
+    }
+    if (typeof (error as { message?: string }).message === 'string') {
+      return (error as { message?: string }).message;
+    }
+    return undefined;
+  }, [form.formState.errors.images]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -187,6 +261,42 @@ export function ProductForm({ mode, productId, defaultValues }: ProductFormProps
         </Field>
         <Field className="md:col-span-2" label="Raw Snapshot JSON">
           <Textarea rows={4} placeholder='{"foo":"bar"}' {...form.register('rawSnapshot')} />
+        </Field>
+      </section>
+
+      <section className="space-y-3">
+        <Field label="상품 이미지">
+          <div className="space-y-3">
+            <Input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={isUploadingImage || isSubmitting} />
+            {isUploadingImage ? <p className="text-xs text-muted-foreground">이미지를 업로드하는 중입니다...</p> : null}
+            {images.length === 0 ? (
+              <p className="text-xs text-muted-foreground">이미지를 업로드하면 목록에 표시됩니다. 업로드 시 자동으로 storage key가 발급됩니다.</p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {images.map((image, index) => {
+                  const url = resolveImageUrl(image.storageKey);
+                  return (
+                    <div key={`${image.storageKey}-${index}`} className="space-y-2 rounded-lg border p-3 text-xs">
+                      {url ? (
+                        <img src={url} alt={`상품 이미지 ${index + 1}`} className="h-32 w-full rounded-md object-cover" />
+                      ) : (
+                        <div className="flex h-32 items-center justify-center rounded-md bg-muted text-muted-foreground">미리보기 없음</div>
+                      )}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex-1 truncate" title={image.storageKey}>
+                          {image.storageKey}
+                        </span>
+                        <Button type="button" size="sm" variant="outline" onClick={() => handleRemoveImage(index)}>
+                          삭제
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <FormError message={imageErrorMessage} />
+          </div>
         </Field>
       </section>
 

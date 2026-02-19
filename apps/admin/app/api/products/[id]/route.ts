@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
-import { productFormSchema } from '@/lib/product-schema';
+import { productFormSchema, type ProductImageInput } from '@/lib/product-schema';
 import { parseCategoryIds } from '@/lib/category';
 
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
@@ -10,6 +10,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     include: {
       externalProductMaps: true,
       optionValues: true,
+      images: true,
     },
   });
   if (!product) {
@@ -38,9 +39,11 @@ export async function PUT(
     const sourceOfTruth = parsed.sourceOfTruth ?? 'IMWEB';
     const externalUrl = parsed.externalUrl?.trim() ? parsed.externalUrl.trim() : null;
     const rawSnapshot = parseRawSnapshot(parsed.rawSnapshot);
+    const imageInputs = normalizeImages(parsed.images);
 
     const updated = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.productOptionValue.deleteMany({ where: { product_id: params.id } });
+      await tx.productImage.deleteMany({ where: { product_id: params.id } });
       const imwebMap = await tx.externalProductMap.findFirst({
         where: { product_id: params.id, system: 'IMWEB' },
       });
@@ -59,6 +62,14 @@ export async function PUT(
           description_html: description,
           option_name: optionName,
           sot_mode: sotMode,
+          images:
+            imageInputs.length > 0
+              ? {
+                  createMany: {
+                    data: imageInputs,
+                  },
+                }
+              : undefined,
           optionValues:
             optionValues.length > 0 && optionName
               ? {
@@ -90,6 +101,7 @@ export async function PUT(
         include: {
           externalProductMaps: true,
           optionValues: true,
+          images: true,
         },
       });
 
@@ -114,4 +126,17 @@ function parseRawSnapshot(value?: string | null) {
   } catch {
     throw new Error('rawSnapshot 필드는 올바른 JSON 문자열이어야 합니다.');
   }
+}
+
+function normalizeImages(images?: ProductImageInput[] | null) {
+  if (!images || images.length === 0) {
+    return [];
+  }
+  return images
+    .filter((image) => Boolean(image.storageKey))
+    .map((image, index) => ({
+      type: image.type ?? 'THUMBNAIL',
+      storage_key: image.storageKey,
+      sort_order: image.sortOrder ?? index,
+    }));
 }

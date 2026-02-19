@@ -22,8 +22,13 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/imweb_master_db?schema=public
       NODE_ENV: production
+      PRODUCT_IMAGE_DIR: /data/product-images
+      PRODUCT_IMAGE_MAX_SIZE_MB: 8
+      NEXT_PUBLIC_IMAGE_BASE_URL: http://localhost:3000/images
     ports:
       - '3000:3000'
+    volumes:
+      - ./storage/images:/data/product-images
 
   cli:
     build:
